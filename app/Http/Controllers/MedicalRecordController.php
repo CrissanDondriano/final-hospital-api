@@ -5,23 +5,32 @@ namespace App\Http\Controllers;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use App\Models\Appointment;
 
 class MedicalRecordController extends Controller
 {
     public function index()
     {
-        return MedicalRecord::all();
+        $appointments = Appointment::all();
+        $records = MedicalRecord::all();
+        $patients = Patient::all();
+
+        return response()->json([
+            'appointments' => $appointments,
+            'records' => $records,
+            'patients' => $patients
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'patient_name' => 'required|string',
+            'patient_id' => 'required|exists:patients,id',
             'description' => 'required|string',
             'date' => 'required|date',
         ]);
 
-        $patient = Patient::whereRaw('LOWER(name) = ?', [strtolower($validated['patient_name'])])->firstOrFail();
+        $patient = Patient::findOrFail($validated['patient_id']);
 
         $record = MedicalRecord::create([
             'patient_id' => $patient->user_id,
